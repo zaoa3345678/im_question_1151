@@ -19,14 +19,18 @@
       "label": "對資管系的提問",
       "title": "資管新生提問主題地圖",
       "intro": "第八週大學入門，同學對資管系的提問",
-      "method": "分類方式：6大類由人工歸納；大類下的子主題依語意建議，可再調整。"
+      "method": "分類方式：6大類由人工歸納；大類下的子主題依語意建議，可再調整。",
+      "src": "data/major.csv",
+      "sheet": ""
     },
     {
       "key": "campus",
       "label": "初入大學的提問",
       "title": "新生初入大學提問地圖",
       "intro": "大學入門課程中，新生對大學生活的提問",
-      "method": "分類方式：由人工歸納，可再調整。"
+      "method": "分類方式：由人工歸納，可再調整。",
+      "src": "data/campus.csv",
+      "sheet": ""
     }
   ]
 }
@@ -119,7 +123,7 @@ c25,4,校園環境與設施,校園大、坡多、太陽大，還在認路、找�
 c26,4,校園環境與設施,校園大、坡多、太陽大，還在認路、找好去處。,爬坡、日曬與交通,為何校園不能騎車,可能怕校園變碰碰車場地?
 c27,4,校園環境與設施,校園大、坡多、太陽大，還在認路、找好去處。,爬坡、日曬與交通,一定要爬山嗎?,要。畢業前夕可以重裝登嘉明湖，感謝靜宜的訓練。
 c28,4,校園環境與設施,校園大、坡多、太陽大，還在認路、找好去處。,爬坡、日曬與交通,大家都怎麼防曬?我看起來快變另一個種族了,我都物理防曬啦，比較便宜。偶爾會化學防曬，抹臉。
-c29,4,校園環境與設施,校園大、坡多、太陽大，還在認路、找好去處。,吃喝與好去處,學餐推薦,我都吃炸雞大獅。
+c29,4,校園環境與設施,校園大、坡多、太陽大，還在認路、找好去處。,吃喝與好去處,學餐推薦（試算表版）,我都吃炸雞大獅。
 c30,4,校園環境與設施,校園大、坡多、太陽大，還在認路、找好去處。,吃喝與好去處,靜宜哪裡有鋼琴,好像有鋼琴社，但有沒有開放的鋼琴我就不確定，可以跟學校建議一下?
 c31,4,校園環境與設施,校園大、坡多、太陽大，還在認路、找好去處。,吃喝與好去處,靜宜可以攀樹?,可以。有類似的體育還通識的課程。
 c32,5,宿舍生活,住宿條件，以及宿舍裡的怪事。,住宿條件,宿舍有沒有可能是包間?,有，恭喜你。
@@ -135,6 +139,8 @@ c41,7,升學與未來,才剛入學，已經在想研究所、重考與出路。,
 c42,7,升學與未來,才剛入學，已經在想研究所、重考與出路。,研究所與重考,需要重考嗎?,"看你，我建議先熟悉""所謂大學/資管是何物""、先修相關的科目，在決定要轉校/系。"
 c43,7,升學與未來,才剛入學，已經在想研究所、重考與出路。,出路,資管系畢業只能當MIS?,有系友在科技藝術領域任職(清大)、資安、軟體、網路、硬體、專案、ERP…都有，主要看你的個人興趣。
 </script>
+
+
 
 
 <style>
@@ -246,7 +252,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
   </div>
 
   <div class="qm-foot">
-    <span id="qm-method"></span>
+    <span><span id="qm-method"></span> <span id="qm-src"></span></span>
     <button class="qm-link" id="qm-admin-open" type="button">更新資料（老師用）</button>
   </div>
 
@@ -254,6 +260,8 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
     <h2 class="qm-h2">更新資料</h2>
     <p class="qm-note">修改只在你的瀏覽器裡預覽，不會影響已上傳的檔案。確認無誤後按「下載新的 HTML」，再把新檔案上傳到學習平台。</p>
     <p class="qm-note">目前編輯的分頁：<b id="qm-admin-tab"></b>（要改另一個分頁，請先點上方的分頁切換過去）</p>
+    <label>Google 試算表 CSV 網址（此分頁；在試算表「檔案 → 共用 → 發布到網路」取得）<input type="text" id="qm-in-sheet" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=...&amp;single=true&amp;output=csv"></label>
+    <div class="qm-admin-row"><button class="qm-btn" id="qm-test-sheet" type="button">測試試算表連線</button></div>
     <label>分頁名稱<input type="text" id="qm-in-label"></label>
     <label>標題<input type="text" id="qm-in-title"></label>
     <label>說明（例如：第六週大學入門，同學對資管系的提問）<input type="text" id="qm-in-intro"></label>
@@ -496,7 +504,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
   const toCsv = () => '\uFEFF' + d3.csvFormat(rows, COLS);
   function fillAdmin() {
     $('qm-admin-tab').textContent = config.label || '';
-    $('qm-in-label').value = config.label || ''; $('qm-in-title').value = config.title || ''; $('qm-in-intro').value = config.intro || ''; $('qm-in-method').value = config.method || '';
+    $('qm-in-label').value = config.label || ''; $('qm-in-sheet').value = config.sheet || ''; $('qm-in-title').value = config.title || ''; $('qm-in-intro').value = config.intro || ''; $('qm-in-method').value = config.method || '';
     msg('');
   }
   $('qm-admin-open').addEventListener('click', () => {
@@ -506,6 +514,21 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
   $('qm-admin-close').addEventListener('click', () => { $('qm-admin').hidden = true; });
   [['qm-in-title', 'title'], ['qm-in-intro', 'intro'], ['qm-in-method', 'method']].forEach(([id, key]) =>
     $(id).addEventListener('input', (e) => { config[key] = e.target.value; drawHeader(); }));
+  $('qm-in-sheet').addEventListener('input', (e) => { config.sheet = e.target.value.trim(); });
+  $('qm-test-sheet').addEventListener('click', async () => {
+    const raw = $('qm-in-sheet').value.trim();
+    if (!raw) { msg('請先貼上試算表的 CSV 網址。'); return; }
+    if (/\/spreadsheets\/d\/[^e][^/]*\/edit|\/edit(#|\?|$)/.test(raw)) { msg('這是試算表的「編輯」連結。請改用「檔案 → 共用 → 發布到網路」，選擇該工作表與「逗號分隔值 (.csv)」後產生的網址。'); return; }
+    msg('連線中…');
+    try {
+      const next = await fetchRows(sheetUrl(raw));
+      if (!next.length) { msg('連線成功，但沒有讀到提問。請確認第一列欄位名稱，以及發布的是正確的工作表。'); return; }
+      config.sheet = raw; data[config.key] = next; rows = next; config._from = 'sheet';
+      state.cat = null; state.sub = null; made.view = null; drawTabs(); drawAll();
+      $('qm-src').textContent = '｜資料來源：Google 試算表';
+      msg(`連線成功，讀到 ${next.length} 則提問。所有分頁都設定好後，按「下載新的 HTML」並上傳到 GitHub（只需做一次）。`);
+    } catch (err) { msg('讀不到資料：請確認已「發布到網路」、格式選 CSV，且網址完整。'); }
+  });
   $('qm-in-label').addEventListener('input', (e) => { config.label = e.target.value; $('qm-admin-tab').textContent = config.label; drawTabs(); });
   $('qm-dl-csv').addEventListener('click', () => download(`${(config.label || '提問資料').replace(/[\\/:*?"<>|]/g, '')}.csv`, toCsv(), 'text/csv;charset=utf-8'));
   $('qm-up-csv').addEventListener('change', async (e) => {
@@ -525,7 +548,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
   $('qm-dl-html').addEventListener('click', () => {
     const doc = new DOMParser().parseFromString(SOURCE, 'text/html');
     const cfg = doc.getElementById('qm-config');
-    cfg.textContent = '\n' + JSON.stringify(site, null, 2) + '\n';
+    cfg.textContent = '\n' + JSON.stringify(site, (k, v) => k.startsWith('_') ? undefined : v, 2) + '\n';
     doc.querySelectorAll('script.qm-data, #qm-data').forEach((s) => s.remove());
     let after = cfg;
     site.tabs.forEach((tb) => {
@@ -535,7 +558,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
       after.after(doc.createTextNode('\n'), s); after = s;
     });
     download('index.html', '<!DOCTYPE html>\n' + doc.documentElement.outerHTML, 'text/html;charset=utf-8');
-    msg('已下載新的 index.html（含所有分頁），覆蓋 GitHub 上的同名檔案即可。');
+    msg('已下載新的 index.html（含所有分頁與試算表設定），覆蓋 GitHub 上的同名檔案即可。');
   });
 
   site.tabs.forEach((tb, k) => {
@@ -544,5 +567,52 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
   });
   const start = site.tabs.findIndex((tb) => '#' + tb.key === location.hash);
   switchTab(start >= 0 ? start : 0);
+
+  // ---- 從線上 CSV 載入最新資料（失敗時沿用網頁內建資料）----
+  const decode = (buf) => {
+    try { return new TextDecoder('utf-8', {fatal: true}).decode(buf); }
+    catch (e) { return new TextDecoder('big5').decode(buf); }
+  };
+  // 把各種 Google 試算表連結整理成「發布到網路」的 CSV 網址
+  const sheetUrl = (u) => {
+    u = String(u || '').trim();
+    if (!u) return '';
+    if (/\/spreadsheets\/d\/e\//.test(u)) {
+      u = u.replace('/pubhtml', '/pub');
+      if (!/output=csv/.test(u)) u += (u.includes('?') ? '&' : '?') + 'output=csv';
+    }
+    return u;
+  };
+  const fetchRows = async (src) => {
+    const url = src + (src.includes('?') ? '&' : '?') + 't=' + Date.now();
+    const res = await fetch(url, {cache: 'no-store'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = decode(await res.arrayBuffer());
+    if (/^\s*<(!doctype|html)/i.test(text)) throw new Error('not csv');
+    return parse(text);
+  };
+  // 讀取順序：Google 試算表 → GitHub 的 data 資料夾 → 網頁內建資料
+  const loadRemote = async (tb) => {
+    const tries = [];
+    if (tb.sheet) tries.push(['sheet', sheetUrl(tb.sheet)]);
+    if (tb.src && location.protocol !== 'file:') tries.push(['file', tb.src]);
+    for (const [kind, src] of tries) {
+      try { const next = await fetchRows(src); if (next.length) { data[tb.key] = next; return kind; } } catch (e) {}
+    }
+    return '';
+  };
+  const SRC_LABEL = {sheet: 'Google 試算表', file: '網站 data 資料夾', '': '網頁內建資料'};
+  Promise.all(site.tabs.map(loadRemote)).then((kinds) => {
+    site.tabs.forEach((tb, k) => { tb._from = kinds[k]; });
+    const n = kinds.filter(Boolean).length;
+    const showSrc = () => { $('qm-src').textContent = '｜資料來源：' + SRC_LABEL[config._from || '']; };
+    showSrc();
+    $('qm-tabs').addEventListener('click', showSrc);
+    if (n) {
+      rows = data[config.key] || [];
+      if (state.cat && !rows.some((r) => r.category === state.cat)) { state.cat = null; state.sub = null; }
+      made.view = null; drawTabs(); drawAll();
+    }
+  });
 })();
 </script></body></html>

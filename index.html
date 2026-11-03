@@ -8,16 +8,30 @@
   最簡單：用瀏覽器打開本檔，按頁面最下方「更新資料（老師用）」，
   上傳新的 CSV，再按「下載新的 HTML」，把下載的檔案上傳到學習平台即可。
   CSV 欄位：id, category_order, category, category_note, subtopic, question, reply
-  也可以直接用文字編輯器修改下方 id="qm-config" 與 id="qm-data" 兩段內容。
+  每個分頁各有一份 CSV：先點上方分頁切換，再按「更新資料」，上傳的 CSV 只會套用到目前的分頁。
+  也可以直接用文字編輯器修改下方 id="qm-config"（分頁名稱與說明）與 class="qm-data"（各分頁資料）。
 -->
 <script type="application/json" id="qm-config">
 {
-  "title": "資管新生提問主題地圖",
-  "intro": "第八週大學入門，同學對資管系的提問",
-  "method": "分類方式：6大類由人工歸納；大類下的子主題依語意建議，可再調整。"
+  "tabs": [
+    {
+      "key": "major",
+      "label": "對資管系的提問",
+      "title": "資管新生提問主題地圖",
+      "intro": "第八週大學入門，同學對資管系的提問",
+      "method": "分類方式：6大類由人工歸納；大類下的子主題依語意建議，可再調整。"
+    },
+    {
+      "key": "campus",
+      "label": "初入大學的提問",
+      "title": "新生初入大學提問地圖",
+      "intro": "大學入門課程中，新生對大學生活的提問",
+      "method": "分類方式：由人工歸納，可再調整。"
+    }
+  ]
 }
 </script>
-<script type="text/csv" id="qm-data">
+<script type="text/csv" class="qm-data" data-tab="major">
 id,category_order,category,category_note,subtopic,question,reply
 q01,1,AI 衝擊與資管定位,核心焦慮：AI 這麼強，學這個會不會失業？資管和資工、企管比起來競爭力如何？,AI 會不會取代我們,AI寫程式真的很厲害嗎?,很厲害，但常寫出看似正確卻有錯的程式。
 q02,1,AI 衝擊與資管定位,核心焦慮：AI 這麼強，學這個會不會失業？資管和資工、企管比起來競爭力如何？,AI 會不會取代我們,程式設計之後會被AI取代嗎?,會取代只會打字的人；懂需求、會拆解問題的人更被需要。
@@ -74,6 +88,9 @@ q54,5,未來出路與職涯,對畢業後的出路、市場待遇與就業環境�
 q55,5,未來出路與職涯,對畢業後的出路、市場待遇與就業環境感到迷茫。,該培養什麼能力,哪一方面的技能對未來求職最有幫助?,程式與資料分析是基本，再加上溝通、簡報與解決問題的能力。
 q56,5,未來出路與職涯,對畢業後的出路、市場待遇與就業環境感到迷茫。,該培養什麼能力,資訊管理人才日後最需要培養什麼能力?,發現問題、用資訊解決問題，以及持續學新技術的能力。
 q57,6,幽默／現實人生,,錢,我什麼時候會有很多錢?,當你能解決別人願意付錢解決的問題時。
+</script>
+<script type="text/csv" class="qm-data" data-tab="campus">
+id,category_order,category,category_note,subtopic,question,reply
 </script>
 <style>
 :root{
@@ -140,6 +157,14 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
 .qm-admin label{display:flex;flex-direction:column;gap:4px;font-size:.9rem}
 .qm-admin input[type=text]{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
 .qm-admin-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.qm-tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:2px solid var(--line);margin-bottom:-6px}
+.qm-tabs:empty{display:none}
+.qm-tab{font:inherit;font-size:1rem;font-weight:600;background:none;border:0;border-bottom:3px solid transparent;margin-bottom:-2px;padding:8px 16px;color:var(--muted);cursor:pointer}
+.qm-tab:hover{color:var(--fg)}
+.qm-tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--c1)}
+.qm-tab:focus-visible{outline:2px solid var(--fg);outline-offset:-2px}
+.qm-tab .qm-n{font-weight:400;margin-left:6px}
+.qm-chart-empty{fill:var(--muted);font-size:16px;font-family:var(--font)}
 .qm-msg{font-size:.85rem;color:var(--muted);min-height:1.2em;margin:0}
 @media (prefers-reduced-motion:no-preference){.qm-li{animation:qmIn .35s ease-out}}
 @keyframes qmIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -147,6 +172,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
 </head>
 <body>
 <div class="qm">
+  <nav class="qm-tabs" id="qm-tabs" role="tablist" aria-label="提問分頁"></nav>
   <header>
     <h1 class="qm-title" id="qm-title"></h1>
     <p class="qm-lead" id="qm-lead"></p>
@@ -155,7 +181,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
   <div class="qm-bar">
     <div class="qm-legend" id="qm-legend" aria-label="類別"></div>
     <div class="qm-tools">
-      <input class="qm-search" id="qm-search" type="search" placeholder="搜尋提問，例如：AI、統計、專題" aria-label="搜尋提問">
+      <input class="qm-search" id="qm-search" type="search" placeholder="搜尋提問關鍵字" aria-label="搜尋提問">
       <button class="qm-btn" id="qm-reset" type="button">顯示全部</button>
       <label class="qm-toggle"><input type="checkbox" id="qm-show-reply" checked=""> 顯示回覆</label>
     </div>
@@ -182,6 +208,8 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
   <section class="qm-admin" id="qm-admin" hidden="">
     <h2 class="qm-h2">更新資料</h2>
     <p class="qm-note">修改只在你的瀏覽器裡預覽，不會影響已上傳的檔案。確認無誤後按「下載新的 HTML」，再把新檔案上傳到學習平台。</p>
+    <p class="qm-note">目前編輯的分頁：<b id="qm-admin-tab"></b>（要改另一個分頁，請先點上方的分頁切換過去）</p>
+    <label>分頁名稱<input type="text" id="qm-in-label"></label>
     <label>標題<input type="text" id="qm-in-title"></label>
     <label>說明（例如：第六週大學入門，同學對資管系的提問）<input type="text" id="qm-in-intro"></label>
     <label>頁尾的分類說明<input type="text" id="qm-in-method"></label>
@@ -205,9 +233,13 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
   const SOURCE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
   const $ = (id) => document.getElementById(id);
   const COLS = ['id','category_order','category','category_note','subtopic','question','reply'];
-  let config = {};
-  try { config = JSON.parse($('qm-config').textContent); } catch (e) { config = {}; }
+  let site = {};
+  try { site = JSON.parse($('qm-config').textContent); } catch (e) { site = {}; }
+  if (!Array.isArray(site.tabs) || !site.tabs.length) site = {tabs: [{key: 'tab1', label: site.title || '提問', ...site}]};
+  let cur = 0;
+  let config = site.tabs[0];
   let rows = [];
+  const data = {};
   const state = {cat: null, sub: null, search: ''};
   const made = {view: null, w: 0};
 
@@ -221,6 +253,26 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
 
   function select(cat, sub) { state.cat = cat; state.sub = sub; drawAll(); }
 
+  function drawTabs() {
+    const el = $('qm-tabs'); el.replaceChildren();
+    if (site.tabs.length < 2) return;
+    site.tabs.forEach((tb, k) => {
+      const b = mk('button', 'qm-tab'); b.type = 'button'; b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(k === cur));
+      b.append(mk('span', null, tb.label || `分頁 ${k + 1}`), mk('span', 'qm-n', (data[tb.key] || []).length));
+      b.onclick = () => switchTab(k);
+      el.append(b);
+    });
+  }
+
+  function switchTab(k) {
+    cur = k; config = site.tabs[k]; rows = data[config.key] || [];
+    state.cat = null; state.sub = null; state.search = ''; $('qm-search').value = ''; made.view = null;
+    try { history.replaceState(null, '', '#' + config.key); } catch (e) {}
+    drawTabs(); drawAll();
+    if (!$('qm-admin').hidden) fillAdmin();
+  }
+
   function drawHeader() {
     document.title = config.title || '提問主題地圖';
     $('qm-title').textContent = config.title || '提問主題地圖';
@@ -229,6 +281,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
     const n = {}; rows.forEach((r) => { n[r.category] = (n[r.category] || 0) + 1; });
     const top = Object.entries(n).sort((a, b) => b[1] - a[1])[0];
     const b = (t) => mk('b', null, String(t));
+    if (!rows.length) { lead.append((config.intro ? config.intro + '，' : '') + '目前還沒有加入提問。'); return; }
     lead.append((config.intro ? config.intro + '，' : '') + '共 ', b(rows.length), ' 則，歸成 ', b(Object.keys(n).length), ' 大類');
     if (top) lead.append('；問得最多的是「', b(top[0]), '」，共 ', b(top[1]), ' 則。'); else lead.append('。');
   }
@@ -261,7 +314,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
     const h = Math.round(Math.max(320, Math.min(w * 0.82, 620)));
     svg.selectAll('*').remove();
     svg.attr('viewBox', [0, 0, w, h]).attr('height', h);
-    if (!rows.length) return;
+    if (!rows.length) { svg.attr('height', 220).attr('viewBox', [0, 0, w, 220]); svg.append('text').attr('class', 'qm-chart-empty').attr('x', w / 2).attr('y', 110).attr('text-anchor', 'middle').text('這個分頁還沒有提問'); return; }
     const root = d3.pack().size([w, h]).padding((d) => d.depth === 0 ? 14 : d.depth === 1 ? 7 : 2.5)(
       d3.hierarchy(data).sum((d) => d.value || 0).sort((a, b) => b.value - a.value));
     const focus = (state.cat && root.children.find((c) => c.data.cat === state.cat)) || root;
@@ -344,6 +397,7 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
     crumbs.append(mk('span', 'qm-n', term ? `　${shown.length} / ${scope.length} 則` : `　${shown.length} 則`));
     el.append(crumbs);
     if (state.cat && scope[0] && scope[0].category_note) el.append(mk('p', 'qm-catnote', scope[0].category_note));
+    if (!rows.length) { el.append(mk('p', 'qm-empty', '這個分頁還沒有提問。')); return; }
     if (!shown.length) { el.append(mk('p', 'qm-empty', '沒有符合的提問，換個關鍵字試試，或按「顯示全部」。')); return; }
     const hl = (node, text) => {
       if (!term) { node.textContent = text; return; }
@@ -395,14 +449,20 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   };
   const toCsv = () => '\uFEFF' + d3.csvFormat(rows, COLS);
+  function fillAdmin() {
+    $('qm-admin-tab').textContent = config.label || '';
+    $('qm-in-label').value = config.label || ''; $('qm-in-title').value = config.title || ''; $('qm-in-intro').value = config.intro || ''; $('qm-in-method').value = config.method || '';
+    msg('');
+  }
   $('qm-admin-open').addEventListener('click', () => {
-    $('qm-in-title').value = config.title || ''; $('qm-in-intro').value = config.intro || ''; $('qm-in-method').value = config.method || '';
+    fillAdmin();
     $('qm-admin').hidden = false; $('qm-admin').scrollIntoView({behavior: 'smooth'});
   });
   $('qm-admin-close').addEventListener('click', () => { $('qm-admin').hidden = true; });
   [['qm-in-title', 'title'], ['qm-in-intro', 'intro'], ['qm-in-method', 'method']].forEach(([id, key]) =>
     $(id).addEventListener('input', (e) => { config[key] = e.target.value; drawHeader(); }));
-  $('qm-dl-csv').addEventListener('click', () => download('提問資料.csv', toCsv(), 'text/csv;charset=utf-8'));
+  $('qm-in-label').addEventListener('input', (e) => { config.label = e.target.value; $('qm-admin-tab').textContent = config.label; drawTabs(); });
+  $('qm-dl-csv').addEventListener('click', () => download(`${(config.label || '提問資料').replace(/[\\/:*?"<>|]/g, '')}.csv`, toCsv(), 'text/csv;charset=utf-8'));
   $('qm-up-csv').addEventListener('change', async (e) => {
     const f = e.target.files[0]; if (!f) return;
     try {
@@ -412,21 +472,32 @@ html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font)}
       if (missing.length) { msg(`CSV 缺少欄位：${missing.join('、')}。請確認第一列欄位名稱沒有改動。`); return; }
       const next = parse(text);
       if (!next.length) { msg('CSV 裡沒有讀到任何提問。'); return; }
-      rows = next; state.cat = null; state.sub = null; made.view = null; drawAll();
-      msg(`已載入 ${rows.length} 則提問。確認無誤後，按「下載新的 HTML」。`);
+      rows = next; data[config.key] = next; state.cat = null; state.sub = null; made.view = null; drawTabs(); drawAll();
+      msg(`「${config.label || ''}」已載入 ${rows.length} 則提問。確認無誤後，按「下載新的 HTML」。`);
     } catch (err) { msg('讀取失敗：請另存為「CSV UTF-8」後再上傳。'); }
     e.target.value = '';
   });
   $('qm-dl-html').addEventListener('click', () => {
     const doc = new DOMParser().parseFromString(SOURCE, 'text/html');
-    doc.getElementById('qm-config').textContent = '\n' + JSON.stringify(config, null, 2) + '\n';
-    doc.getElementById('qm-data').textContent = '\n' + d3.csvFormat(rows, COLS) + '\n';
-    const name = (config.title || '提問主題地圖').replace(/[\\/:*?"<>|]/g, '') + '.html';
-    download(name, '<!DOCTYPE html>\n' + doc.documentElement.outerHTML, 'text/html;charset=utf-8');
-    msg('已下載新的 HTML 檔，上傳到學習平台即可。');
+    const cfg = doc.getElementById('qm-config');
+    cfg.textContent = '\n' + JSON.stringify(site, null, 2) + '\n';
+    doc.querySelectorAll('script.qm-data, #qm-data').forEach((s) => s.remove());
+    let after = cfg;
+    site.tabs.forEach((tb) => {
+      const s = doc.createElement('script');
+      s.type = 'text/csv'; s.className = 'qm-data'; s.setAttribute('data-tab', tb.key);
+      s.textContent = '\n' + d3.csvFormat(data[tb.key] || [], COLS) + '\n';
+      after.after(doc.createTextNode('\n'), s); after = s;
+    });
+    download('index.html', '<!DOCTYPE html>\n' + doc.documentElement.outerHTML, 'text/html;charset=utf-8');
+    msg('已下載新的 index.html（含所有分頁），覆蓋 GitHub 上的同名檔案即可。');
   });
 
-  rows = parse($('qm-data').textContent);
-  drawAll();
+  site.tabs.forEach((tb, k) => {
+    const el = document.querySelector(`script.qm-data[data-tab="${tb.key}"]`) || (k === 0 ? $('qm-data') : null);
+    data[tb.key] = el ? parse(el.textContent) : [];
+  });
+  const start = site.tabs.findIndex((tb) => '#' + tb.key === location.hash);
+  switchTab(start >= 0 ? start : 0);
 })();
 </script></body></html>
